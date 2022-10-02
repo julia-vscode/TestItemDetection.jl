@@ -1,4 +1,4 @@
-module TestItemBase
+module TestItemDetection
 
 greet() = print("Hello World!")
 
