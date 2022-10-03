@@ -187,5 +187,5 @@ end
     @test length(test_items) == 1
     @test length(errors) == 0
 
-    @test test_items[1] == (name="foo", range=1:70, code_range=58:66)
+    @test test_items[1] == (name="foo", range=1:70, code_range=57:67, option_default_imports=true, option_tags=[:a, :b])
 end
