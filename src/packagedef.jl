@@ -86,7 +86,7 @@ function find_test_items_detail!(node, testitems, errors)
                             return
                         end
 
-                        push!(option_setup, Symbol(CSTParser.valof(j.args[1])))
+                        push!(option_setup, Symbol(CSTParser.valof(j)))
                     end
                 else
                     push!(errors, (error="Unknown keyword argument.", range=range))
@@ -117,6 +117,43 @@ function find_test_items_detail!(node, testitems, errors)
     elseif node.head == :module && length(node.args)>=3 && node.args[3] isa EXPR && node.args[3].head==:block
         for i in node.args[3].args
             find_test_items_detail!(i, testitems, errors)
+        end
+    end
+end
+
+function find_test_setups_detail!(node, testsetups, errors)
+    node isa EXPR || return
+
+    if node.head == :macrocall && length(node.args)>0 && CSTParser.valof(node.args[1]) == "@testsetup"
+        pos = 1 + get_file_loc(node)[2]
+        range = pos:pos+node.span-1
+
+        # filter out line nodes
+        child_nodes = filter(i->!(isa(i, EXPR) && i.head==:NOTHING && i.args===nothing), node.args)
+
+        # Check for various syntax errors
+        if length(child_nodes)==1
+            push!(errors, (error="Your @testsetup is missing a name and code block.", range=range))
+            return
+        elseif length(child_nodes)>1 && !(child_nodes[2] isa EXPR && child_nodes[2].head==:IDENTIFIER)
+            push!(errors, (error="Your @testsetup must have a first argument that is a valid identifier for the name.", range=range))
+            return
+        elseif length(child_nodes)==2
+            push!(errors, (error="Your @testsetup is missing a code block argument.", range=range))
+            return
+        elseif !(child_nodes[end] isa EXPR && child_nodes[end].head==:block)
+            push!(errors, (error="The final argument of a @testsetup must be a begin end block.", range=range))
+            return
+        else
+            # TODO + 1 here is from the space before the begin end block. We might have to detect that,
+            # not sure whether that is always assigned to the begin end block EXPR
+            code_pos = get_file_loc(child_nodes[end])[2] + 1 + length("begin")
+            code_range = code_pos:code_pos+child_nodes[end].span - 1 - length("begin") - length("end")
+            push!(testsetups, (name=CSTParser.valof(node.args[3]), range=range, code_range=code_range))
+        end
+    elseif node.head == :module && length(node.args)>=3 && node.args[3] isa EXPR && node.args[3].head==:block
+        for i in node.args[3].args
+            find_test_setups_detail!(i, testsetups, errors)
         end
     end
 end
