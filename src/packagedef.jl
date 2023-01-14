@@ -131,8 +131,11 @@ function find_test_detail!(node, testitems, testsetups, errors)
         elseif length(child_nodes)==2
             push!(errors, (error="Your @testsetup is missing a code block argument.", range=range))
             return
-        elseif !(child_nodes[end] isa EXPR && child_nodes[end].head==:block)
-            push!(errors, (error="The final argument of a @testsetup must be a begin end block.", range=range))
+        elseif length(child_nodes)>2 && !(child_nodes[3] isa EXPR && child_nodes[3].head==:block)
+            push!(errors, (error="Your @testsetup must have a begin end block as the second argument.", range=range))
+            return
+        elseif length(child_nodes)>3
+            push!(errors, (error="Your @testsetup cannot have more than two arguments.", range=range))
             return
         else
             # TODO + 1 here is from the space before the begin end block. We might have to detect that,
