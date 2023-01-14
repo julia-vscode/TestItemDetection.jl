@@ -1,6 +1,6 @@
 include("vendored_code.jl")
 
-function find_test_items_detail!(node, testitems, errors)
+function find_test_detail!(node, testitems, testsetups, errors)
     node isa EXPR || return
 
     if node.head == :macrocall && length(node.args)>0 && CSTParser.valof(node.args[1]) == "@testitem"
@@ -114,17 +114,7 @@ function find_test_items_detail!(node, testitems, errors)
 
             push!(testitems, (name=CSTParser.valof(node.args[3]), range=range, code_range=code_range, option_default_imports=option_default_imports, option_tags=option_tags, option_setup=option_setup))
         end
-    elseif node.head == :module && length(node.args)>=3 && node.args[3] isa EXPR && node.args[3].head==:block
-        for i in node.args[3].args
-            find_test_items_detail!(i, testitems, errors)
-        end
-    end
-end
-
-function find_test_setups_detail!(node, testsetups, errors)
-    node isa EXPR || return
-
-    if node.head == :macrocall && length(node.args)>0 && CSTParser.valof(node.args[1]) == "@testsetup"
+    elseif node.head == :macrocall && length(node.args)>0 && CSTParser.valof(node.args[1]) == "@testsetup"
         pos = 1 + get_file_loc(node)[2]
         range = pos:pos+node.span-1
 
@@ -153,7 +143,7 @@ function find_test_setups_detail!(node, testsetups, errors)
         end
     elseif node.head == :module && length(node.args)>=3 && node.args[3] isa EXPR && node.args[3].head==:block
         for i in node.args[3].args
-            find_test_setups_detail!(i, testsetups, errors)
+            find_test_detail!(i, testitems, testsetups, errors)
         end
     end
 end
