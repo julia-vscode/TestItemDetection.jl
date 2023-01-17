@@ -188,7 +188,7 @@ end
 @testitem "All parts correctly there" begin
     import CSTParser
 
-    code = CSTParser.parse("""@testitem "foo" tags=[:a, :b] default_imports=true begin println() end
+    code = CSTParser.parse("""@testitem "foo" tags=[:a, :b] setup=[FooSetup] default_imports=true begin println() end
     """)
 
     test_items = []
@@ -199,7 +199,7 @@ end
     @test length(test_items) == 1
     @test length(errors) == 0
 
-    @test test_items[1] == (name="foo", range=1:70, code_range=57:67, option_default_imports=true, option_tags=[:a, :b], option_setup=Symbol[])
+    @test test_items[1] == (name="foo", range=1:87, code_range=74:84, option_default_imports=true, option_tags=[:a, :b], option_setup=Symbol[:FooSetup])
 end
 
 @testitem "@testsetup macro missing module arg" begin
