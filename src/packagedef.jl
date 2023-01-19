@@ -144,3 +144,102 @@ function find_test_detail!(node, testitems, testsetups, errors)
         end
     end
 end
+
+function vec_startswith(a, b)
+    if length(a) < length(b)
+        return false
+    end
+
+    for (i,v) in enumerate(b)
+        if a[i] != v
+            return false
+        end
+    end
+    return true
+end
+
+function find_package_for_file(jw::JuliaWorkspace, file::URI)
+    file_path = uri2filepath(file)
+    package = jw._packages |>
+        keys |>
+        collect |>
+        x -> map(x) do i
+            package_folder_path = uri2filepath(i)
+            parts = splitpath(package_folder_path)
+            return (uri = i, parts = parts)
+        end |>
+        x -> filter(x) do i
+            return vec_startswith(splitpath(file_path), i.parts)
+        end |>
+        x -> sort(x, by=i->length(i.parts), rev=true) |>
+        x -> length(x) == 0 ? nothing : first(x).uri
+
+    return package
+end
+
+function find_project_for_file(jw::JuliaWorkspace, file::URI)
+    file_path = uri2filepath(file)
+    project = jw._projects |>
+        keys |>
+        collect |>
+        x -> map(x) do i
+            project_folder_path = uri2filepath(i)
+            parts = splitpath(project_folder_path)
+            return (uri = i, parts = parts)
+        end |>
+        x -> filter(x) do i
+            return vec_startswith(splitpath(file_path), i.parts)
+        end |>
+        x -> sort(x, by=i->length(i.parts), rev=true) |>
+        x -> length(x) == 0 ? nothing : first(x).uri
+
+    return project
+end
+
+function find_tests_in_file!(jw, uri, cst, fallback_project_uri)
+    # Find which workspace folder the doc is in.
+    parent_workspaceFolders = sort(filter(f -> startswith(string(uri), string(f)), collect(jw._workspace_folders)), by=length, rev=true)
+
+    # If the file is not in the workspace, we don't report nothing
+    isempty(parent_workspaceFolders) && return
+
+    project_uri = find_project_for_file(jw, uri)
+    package_uri = find_package_for_file(jw, uri)
+
+    if project_uri === nothing
+        project_uri = fallback_project_uri
+    end
+
+    if package_uri === nothing
+        package_name = ""
+    else
+        package_name = jw._packages[package_uri].name
+    end
+
+    if haskey(jw._projects, project_uri)
+        relevant_project = jw._projects[project_uri]
+
+        if !haskey(relevant_project.deved_packages, package_uri)
+            project_uri = nothing
+        end
+    else
+        project_uri = nothing
+    end
+
+    testitems = []
+    testsetups = []
+    testerrors = []
+
+    for i in cst.args
+        find_test_detail!(i, testitems, testsetups, testerrors)
+    end
+
+    return (
+        project_uri=project_uri,
+        package_uri=package_uri,
+        package_name=package_name,
+        testitems=testitems,
+        testsetups=testsetups,
+        testerrors=testerrors
+    )
+end
