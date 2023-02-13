@@ -216,7 +216,9 @@ function find_tests_in_file!(jw, uri, cst, fallback_project_uri)
         package_name = jw._packages[package_uri].name
     end
 
-    if haskey(jw._projects, project_uri)
+    if project_uri == package_uri
+        # nothing to do
+    elseif haskey(jw._projects, project_uri)
         relevant_project = jw._projects[project_uri]
 
         if !haskey(relevant_project.deved_packages, package_uri)
