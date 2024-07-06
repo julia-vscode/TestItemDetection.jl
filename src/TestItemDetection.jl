@@ -1,11 +1,7 @@
 module TestItemDetection
 
-import CSTParser
-using CSTParser: EXPR
-
-import JuliaWorkspaces
-using JuliaWorkspaces: JuliaWorkspace
-using JuliaWorkspaces.URIs2: URI
+import JuliaSyntax
+using JuliaSyntax: @K_str, kind, children, haschildren, first_byte, last_byte, SyntaxNode
 
 include("packagedef.jl")
 
