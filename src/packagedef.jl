@@ -5,13 +5,13 @@ function find_test_detail!(node, testitems, testsetups, testerrors)
         child_nodes = children(node)
 
         # Check for various syntax errors
-        if length(child_nodes)==1
+        if length(child_nodes) == 1
             push!(testerrors, (message="Your @testitem is missing a name and code block.", range=range))
             return
-        elseif length(child_nodes)>1 && !(kind(child_nodes[2]) == K"string")
+        elseif length(child_nodes) > 1 && !(kind(child_nodes[2]) == K"string")
             push!(testerrors, (message="Your @testitem must have a first argument that is of type String for the name.", range=range))
             return
-        elseif length(child_nodes)==2
+        elseif length(child_nodes) == 2
             push!(testerrors, (message="Your @testitem is missing a code block argument.", range=range))
             return
         elseif !(kind(child_nodes[end]) == K"block")
@@ -27,10 +27,10 @@ function find_test_detail!(node, testitems, testsetups, testerrors)
                 if kind(i) != K"="
                     push!(testerrors, (message="The arguments to a @testitem must be in keyword format.", range=range))
                     return
-                elseif !(length(children(i))==2)
+                elseif !(length(children(i)) == 2)
                     error("This code path should not be possible.")
                 elseif kind(i[1]) == K"Identifier" && i[1].val == :tags
-                    if option_tags!==nothing
+                    if option_tags !== nothing
                         push!(testerrors, (message="The keyword argument tags cannot be specified more than once.", range=range))
                         return
                     end
@@ -63,7 +63,7 @@ function find_test_detail!(node, testitems, testsetups, testerrors)
 
                     option_default_imports = i[2].val
                 elseif kind(i[1]) == K"Identifier" && i[1].val == :setup
-                    if option_setup!==nothing
+                    if option_setup !== nothing
                         push!(testerrors, (message="The keyword argument setup cannot be specified more than once.", range=range))
                         return
                     end
@@ -89,15 +89,15 @@ function find_test_detail!(node, testitems, testsetups, testerrors)
                 end
             end
 
-            if option_tags===nothing
+            if option_tags === nothing
                 option_tags = Symbol[]
             end
 
-            if option_default_imports===nothing
+            if option_default_imports === nothing
                 option_default_imports = true
             end
 
-            if option_setup===nothing
+            if option_setup === nothing
                 option_setup = Symbol[]
             end
 
@@ -109,8 +109,8 @@ function find_test_detail!(node, testitems, testsetups, testerrors)
             end
 
             push!(testitems,
-                    (
-                    name=node[2,1].val,
+                (
+                    name=node[2, 1].val,
                     range=range,
                     code_range=code_range,
                     option_default_imports=option_default_imports,
@@ -127,13 +127,13 @@ function find_test_detail!(node, testitems, testsetups, testerrors)
         child_nodes = children(node)
 
         # Check for various syntax errors
-        if length(child_nodes)==1
+        if length(child_nodes) == 1
             push!(testerrors, (message="Your $testkind is missing a name and code block.", range=range))
             return
-        elseif length(child_nodes)>1 && !(kind(child_nodes[2]) == K"Identifier")
+        elseif length(child_nodes) > 1 && !(kind(child_nodes[2]) == K"Identifier")
             push!(testerrors, (message="Your $testkind must have a first argument that is an identifier for the name.", range=range))
             return
-        elseif length(child_nodes)==2
+        elseif length(child_nodes) == 2
             push!(testerrors, (message="Your $testkind is missing a code block argument.", range=range))
             return
         elseif !(kind(child_nodes[end]) == K"block")
@@ -145,7 +145,7 @@ function find_test_detail!(node, testitems, testsetups, testerrors)
                 if kind(i) != K"="
                     push!(testerrors, (message="The arguments to a $testkind must be in keyword format.", range=range))
                     return
-                elseif !(length(children(i))==2)
+                elseif !(length(children(i)) == 2)
                     error("This code path should not be possible.")
                 else
                     push!(testerrors, (message="Unknown keyword argument.", range=range))
@@ -161,9 +161,9 @@ function find_test_detail!(node, testitems, testsetups, testerrors)
                 (first_byte(code_block)+5):(last_byte(code_block)-3)
             end
 
-            testkind2 = if testkind==Symbol("@testmodule")
+            testkind2 = if testkind == Symbol("@testmodule")
                 :module
-            elseif testkind==Symbol("@testsnippet")
+            elseif testkind == Symbol("@testsnippet")
                 :snippet
             else
                 error("Unknown testkind")
