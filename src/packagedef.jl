@@ -1,6 +1,11 @@
+# The JuliaSyntax range operates on bytes, but we need string indices, this function does that
+function our_range(node::SyntaxNode)
+    return node.position:prevind(node.source.code, node.position + JuliaSyntax.span(node))
+end
+
 function find_test_detail!(node, testitems, testsetups, testerrors)
     if kind(node) == K"macrocall" && haschildren(node) && node[1].val == Symbol("@testitem")
-        testitem_range = range(node)
+        testitem_range = our_range(node)
 
         child_nodes = children(node)
 
@@ -103,9 +108,9 @@ function find_test_detail!(node, testitems, testsetups, testerrors)
 
             code_block = child_nodes[end]
             code_range = if haschildren(code_block) && length(children(code_block)) > 0
-                first(range(code_block[1])):last(range(code_block[end]))
+                first(our_range(code_block[1])):last(our_range(code_block[end]))
             else
-                (first(range(code_block))+5):(last(range(code_block))-3)
+                (first(our_range(code_block))+5):(last(our_range(code_block))-3)
             end
 
             push!(testitems,
@@ -120,7 +125,7 @@ function find_test_detail!(node, testitems, testsetups, testerrors)
             )
         end
     elseif kind(node) == K"macrocall" && haschildren(node) && (node[1].val == Symbol("@testmodule") || node[1].val == Symbol("@testsnippet"))
-        testitem_range = range(node)
+        testitem_range = our_range(node)
 
         testkind = node[1].val
 
@@ -156,9 +161,9 @@ function find_test_detail!(node, testitems, testsetups, testerrors)
             mod_name = child_nodes[2].val
             code_block = child_nodes[end]
             code_range = if haschildren(code_block) && length(children(code_block)) > 0
-                first(range(code_block[1])):last(range(code_block[end]))
+                first(our_range(code_block[1])):last(our_range(code_block[end]))
             else
-                (first(range(code_block))+5):(last(range(code_block))-3)
+                (first(our_range(code_block))+5):(last(our_range(code_block))-3)
             end
 
             testkind2 = if testkind==Symbol("@testmodule")
